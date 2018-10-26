@@ -22,7 +22,7 @@ object HigherOrderfunctions {
       case 0 | 1 => true
       case _ => {
         val tail = items.tail
-        ordered(items.head, tail.head) && isSorted(tail.tail, ordered)
+        ordered(items.head, tail.head) && isSortedPatternOnLength(tail.tail, ordered)
       }
     }
   }
@@ -32,8 +32,17 @@ object HigherOrderfunctions {
     items match {
       case Array(_) | Array() => true
       case Array(first, second, rest @ _*) => {
-        ordered(first, second) && isSorted(rest.toArray, ordered)
+        ordered(first, second) && isSortedPatternOnStructure(rest.toArray, ordered)
       }
     }
+  }
+  
+  // class tag required
+  def isSortedPatternShort[A: ClassTag](items: Array[A], ordered: (A, A) => Boolean): Boolean = {
+    if(items.length > 1) {
+      val Array(first, second, rest @ _*) = items
+      ordered(first, second) && isSortedPatternShort(rest.toArray, ordered)
+    }
+    else true
   }
 }
