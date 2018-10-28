@@ -2,7 +2,7 @@ package chapter2
 
 import scala.reflect.ClassTag
 
-object HigherOrderfunctions {
+object HigherOrderFunctions {
   def isSorted[A](items: Array[A], ordered: (A, A) => Boolean): Boolean = {
     if(items.length < 2){
       true
@@ -44,5 +44,17 @@ object HigherOrderfunctions {
       ordered(first, second) && isSortedPatternShort(rest.toArray, ordered)
     }
     else true
+  }
+  
+  def curry[A, B, C](f: (A, B) => C): A => (B => C) = {
+    a => b => f(a,b)
+  }
+  
+  def uncurry[A, B, C](f: A => B => C): (A, B) => C = {
+    (a, b) => f(a)(b)
+  }
+  
+  def compose[A, B, C](f: B => C, g: A => B): A => C = {
+    a => f(g(a))
   }
 }
