@@ -18,7 +18,7 @@ object StreamsPlayGround {
   def generateSequence(start: Int, f: Int => Int): Stream[Int] = cons(f(start), generateSequence(start + 1, f))
 
   // the whole fibonacci sequence: note how the
-  // function takes no parametere, meaning there is no need to specify a limit.
+  // function takes no parameters, meaning there is no need to specify a limit.
   // Note: since it's an infinite stream use stream.take(n).toList to inspect it
   def fibs: Stream[Int] = generateSequence(0, nthFibonacci)
 
@@ -30,16 +30,16 @@ object StreamsPlayGround {
   def fibsSmart: Stream[Int] = cons(0, cons(1, fibsSmart zip (fibsSmart drop 1) map { case (a, b) => a + b }))
   
   // recreating doc example via implicits (https://www.scala-lang.org/api/2.12.3/scala/collection/immutable/Stream.html)
-  def fibsNeat: Stream[Int] = 0 #:: 1 #:: (fibsNeat zip fibsNeat.tail map { case (a, b) => a + b })
+  def fibsNeat: Stream[Int] = 0 #:: 1 #:: (fibsNeat zip (fibsNeat.tail) map { case (a, b) => a + b })
 
-  // unfold with map
+  // unfold with option.map
   def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
     f(z).map(pair => cons(pair._1, unfold(pair._2)(f))).getOrElse(empty)
   }
 
-  // unfold with option.fold
+  // unfold with option.fold (note how type [A] on empty needs to be specified...drawback of option.fold)
   def unfoldUnreadable[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
-    f(z).fold(empty: Stream[A])({ case (a, s) => cons(a, unfoldUnreadable(s)(f)) })
+    f(z).fold(empty[A])({ case (a, s) => cons(a, unfoldUnreadable(s)(f)) })
   }
 
   // unfold with pattern matching and long variable names
@@ -53,7 +53,7 @@ object StreamsPlayGround {
   //TODO test this one!!!
   def fibsWithUnfold: Stream[Int] = {
 
-    // the state represent the next start element
+    // the state represents the next start element
     def getNextFib(a: Int): Option[(Int, Int)] = Some((nthFibonacci(a), a + 1))
 
     unfold(0)(n => getNextFib(n))

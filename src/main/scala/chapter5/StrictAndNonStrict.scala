@@ -69,13 +69,21 @@ object StrictAndNonStrict {
     }
     
     def zip[B](other: Stream[B]): Stream[(A, B)] = (this, other) match{
-      case (Cons(th, tt), Cons(oh, ot)) => cons((th(), oh()), tt() zip ot ())
+      case (Cons(th, tt), Cons(oh, ot)) => cons((th(), oh()), tt() zip ot())
       case _ => Empty
     }
     
     def map[B](f: A => B): Stream[B] = this match {
       case Cons(h, t) => cons(f(h()), t().map(f))
       case Empty => Empty
+    }
+    
+//    def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = {
+//    use unfold...
+//    }
+    
+    def startsWith[A](s: Stream[A]): Boolean = {
+      this zip s map { case (a, b) => a == b } forAll identity
     }
   }
   case object Empty extends Stream[Nothing]
@@ -91,20 +99,10 @@ object StrictAndNonStrict {
       Cons(() => lazyHead, () => lazyTail)
     }
     
-    implicit class toStreamHead[A](h: A){
-      def #::(other: Stream[_]): Stream[_] = cons(h, other)
-      def #::(other: A): Stream[A] = Stream(h, other)
-    }
-    
-    implicit class toStreamTail[A](stream: Stream[A]){
-      def #::(tail: Stream[A]): Stream[A] = stream match {
-        case Cons(h, t) => Cons(h, () => t() #:: tail)
-        case _ => tail
-      }
-      def #::(last: A): Stream[A] = stream match {
-        case Empty => cons(last, stream)
-        case _ => stream #:: Stream(last)
-      }
+    // note the parameter is passed by name to avoid the evaluation of the stream
+    // that woul cause a stack-overflow error
+    implicit class streamAppender[A](tail: => Stream[A]){
+      def #::(h: A): Stream[A] = cons(h, tail)
     }
 
     def empty[A]: Stream[A] = Empty
