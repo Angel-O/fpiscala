@@ -78,12 +78,55 @@ object StrictAndNonStrict {
       case Empty => Empty
     }
     
-//    def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = {
-//    use unfold...
-//    }
+    import StreamsPlayGround.unfold
     
-    def startsWith[A](s: Stream[A]): Boolean = {
-      this zip s map { case (a, b) => a == b } forAll identity
+    def mapWithUnfold[B](f: A => B): Stream[B] = 
+      unfold(this){ as => as.headOption.map(head => (f(head), as.tail)) }
+
+    def takeWithUnfold(n: Int): Stream[A] = {
+      if (n >= 1)
+        unfold(this) { as => as.headOption.map(head => (head, as.tail.takeWithUnfold(n - 1))) }
+      else
+        empty
+    }
+    
+    // one liner and not recursive in takeWithUnfold
+    def takeWithUnfoldOneLiner(n: Int): Stream[A] = {
+        unfold((this, n)) { case (as, i) => as.headOption.collect { case head if(i >= 1) => (head, (as.tail, i - 1)) } }
+    }
+
+    def takeWhileWithUnfold(n: Int)(f: A => Boolean): Stream[A] =
+      if (n >= 1)
+        unfold(this)(as =>
+          as match {
+            case Cons(h, t) if (f(h())) => Some(h(), t())
+            case _          => None
+          })
+      else empty
+      
+    def takeWhileWithUnfoldOneLiner(n: Int)(f: A => Boolean): Stream[A] =
+      unfold(this)( as => as.headOption.collect { case head if(n > 0 && f(head)) => (head, as.tail) } )
+
+    // initialState => this stream, that stream
+    // nextElement => head of this, head of that
+    // nextState => tail of this, tail of that
+    // Scala is amazing !!!  
+    def zipAll[B](that: Stream[B]): Stream[(Option[A], Option[B])] = {
+      unfold((this, that)) {
+        case (a, b) => {
+
+          (a, b) match {
+            case (Cons(ah, at), Cons(bh, bt)) => Some(((Some(ah()), Some(bh())), (at(), bt())))
+            case (empty, Cons(h, t))          => Some(((None, Some(h())), (empty, t())))
+            case (Cons(h, t), empty)          => Some(((Some(h()), None), (t(), empty)))
+            case _                            => None // or equivalently... Some(((None, None), (empty, empty)))
+          }
+        }
+      }
+    }
+    
+    def startsWith[A](that: Stream[A]): Boolean = {
+      this zip that map { case (a, b) => a == b } forAll identity
     }
   }
   case object Empty extends Stream[Nothing]

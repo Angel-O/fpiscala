@@ -50,8 +50,8 @@ object StreamsPlayGround {
     }
   }
 
-  //TODO test this one!!!
-  def fibsWithUnfold: Stream[Int] = {
+  // getNextFib has a terrible runtime!!!!
+  def fibsWithUnfoldSlow: Stream[Int] = {
 
     // the state represents the next start element
     def getNextFib(a: Int): Option[(Int, Int)] = Some((nthFibonacci(a), a + 1))
@@ -59,7 +59,7 @@ object StreamsPlayGround {
     unfold(0)(n => getNextFib(n))
   }
   
-  def fibsWithUnfold2: Stream[Int] = unfold((0, 1)) { case (a, b) => Some((a, (a, a + b))) }
+  def fibsWithUnfoldFast: Stream[BigInt] = unfold((BigInt(0), BigInt(1))) { case (a, b) => Some((b, (b, a + b))) }
   
   def fromWithUnfold(n: Int): Stream[Int] = unfold(n)(a => Some(a, a + 1))
   
