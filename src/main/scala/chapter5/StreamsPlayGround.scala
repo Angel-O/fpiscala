@@ -51,6 +51,8 @@ object StreamsPlayGround {
   }
 
   // getNextFib has a terrible runtime!!!!
+  // also this will cause integer-overflow leading to negative numbers appearing
+  // in the sequence...should use BigInt see below...
   def fibsWithUnfoldSlow: Stream[Int] = {
 
     // the state represents the next start element

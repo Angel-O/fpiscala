@@ -110,33 +110,56 @@ object StrictAndNonStrict {
     // initialState => this stream, that stream
     // nextElement => head of this, head of that
     // nextState => tail of this, tail of that
-    // Scala is amazing !!!  
+    // Scala is amazing !!!
     def zipAll[B](that: Stream[B]): Stream[(Option[A], Option[B])] = {
       unfold((this, that)) {
-        case (a, b) => {
+        case (a, b) => (a, b) match {
 
-          (a, b) match {
-            case (Cons(ah, at), Cons(bh, bt)) => Some(((Some(ah()), Some(bh())), (at(), bt())))
-            case (empty, Cons(h, t))          => Some(((None, Some(h())), (empty, t())))
-            case (Cons(h, t), empty)          => Some(((Some(h()), None), (t(), empty)))
-            case _                            => None // or equivalently... Some(((None, None), (empty, empty)))
-          }
+          case (Cons(ah, at), Cons(bh, bt)) => Some(((Some(ah()), Some(bh())), (at(), bt())))
+          case (empty, Cons(h, t))          => Some(((None, Some(h())), (empty, t())))
+          case (Cons(h, t), empty)          => Some(((Some(h()), None), (t(), empty)))
+          case _                            => None // or equivalently... Some(((None, None), (empty, empty)))
+
         }
       }
     }
     
+    // stack overflow with infinite streams!!!
     def startsWith[A](that: Stream[A]): Boolean = {
       this zip that map { case (a, b) => a == b } forAll identity
+    }
+    
+    def startsWith2[A](that: Stream[A]): Boolean = {
+      this.zipAll(that).takeWhile(!_._2.isEmpty) forAll { case (a, b) => a == b }
+    }
+    
+    // initial state => this
+    // nextElement => currentStream
+    // nextState => currentStream.tail
+    def tails: Stream[Stream[A]] = {
+      unfold(this)( _ match { case Empty => None case stream @ Cons(_, t) => Some((stream, t())) })
+    }
+
+    // inital state => this that
+    // nextElement => f(tuple(thisHead, thatHead))
+    // nextState => tuple(thisTail, thatTail)
+    def zipWith[B, C](that: Stream[B])(f: (A, B) => C): Stream[C] = {
+      unfold(this, that) {
+        _ match {
+          case (Cons(ah, at), Cons(bh, bt)) => Some { ( f(ah(), bh()), (at(), bt()) ) }
+          case _                            => None
+        }
+      }
     }
   }
   case object Empty extends Stream[Nothing]
   
-  // adding '-thunk' suffix because that's what they are and to avoid conflicts with tail in Stream trait
+  // adding '-thunk' suffix because that's what they are and to avoid name conflicts with tail defined in Stream trait
   case class Cons[A](headThunk: () => A, tailThunk: () => Stream[A]) extends Stream[A]
 
   object Stream {
     def cons[A](hd: => A, tl: => Stream[A]): Stream[A] = {
-      // adding 'lazy-' prefix because that's what they are and to avoid conflicts with tail in Stream trait
+      // adding 'lazy-' prefix because that's what they are and to avoid name conflicts with tail defined in Stream trait
       lazy val lazyHead = hd
       lazy val lazyTail = tl
       Cons(() => lazyHead, () => lazyTail)
