@@ -11,7 +11,7 @@ object HigherOrderFunctions {
       val Array(first, second, _*) = items
       if(ordered(first, second)) {
        isSorted(items.drop(2), ordered)
-       }
+      }
        else false
     }  
   }
