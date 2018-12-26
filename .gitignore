@@ -1,10 +1,4 @@
 #### joe made this: http://goel.io/joe
-
-# extra (Eclipse related probably)
-bin/
-*.cache-*
-.settings/
-
 #### scala ####
 *.class
 *.log
@@ -118,4 +112,9 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# extra (Eclipse related probably)
+bin/
+*.cache-*
+.settings/
 
